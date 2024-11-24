@@ -11,11 +11,20 @@ intents.message_content = True  # Permite que o bot leia mensagens
 intents.members = True  # Permite que o bot acesse eventos relacionados a membros
 
 ''' Variavel para gerenciar os comandos do bot '''
-bot: object = commands.Bot(command_prefix="! ", intents=intents)
+bot: object = commands.Bot(command_prefix="!", intents=intents)
 
 ''' Função executada quando o bot ligar'''
-async def bot_on() -> None:
-    print(f'Bot {client.user} está online!')
+@bot.event
+async def on_guild_join(guild) -> str:
+    print(f'Bot {bot.user} está online!')
+    user = guild.owner
+    if user:
+        await user.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificar e pronto! o preço do produto sera enviado para você de 5 em 5 horas ")
+
+''' Comando scrap '''
+@bot.command()
+async def scraping(ctx, *, message: str) -> str:
+    await ctx.send(message)
 
 ''' Carregamento do token '''
 load_dotenv() # Carrega as variaveis de ambiente
