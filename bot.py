@@ -15,9 +15,10 @@ bot: object = commands.Bot(command_prefix="!", intents=intents)
 
 ''' Função executada quando o bot ligar'''
 @bot.event
-async def on_guild_join(guild) -> str:
+async def on_guild_join(guild: object) -> str:
     print(f'Bot {bot.user} está online!')
-    user = guild.owner
+    user: object = guild.owner
+
     if user:
         await user.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificar e pronto! o preço do produto sera enviado para você de 5 em 5 horas ")
 
@@ -29,7 +30,7 @@ async def scraping(ctx, *, message: str) -> str:
 ''' Carregamento do token '''
 load_dotenv() # Carrega as variaveis de ambiente
 
-token = os.getenv("BOT_TOKEN") # Token
+token: str = os.getenv("BOT_TOKEN") # Token
 
 ''' Roda o bot com o token'''
 if __name__ == "__main__":

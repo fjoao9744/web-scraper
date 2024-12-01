@@ -1,33 +1,36 @@
 ''' Importações '''
-from bs4 import BeautifulSoup
-import requests
+from playwright.sync_api import sync_playwright
 import asyncio
 
-''' Coleta e filtragem de html '''
-def get_html(url: str) -> str: # Função que recebe um link e retorna o html daquele link
-    html = requests.get(url) # Faz uma requisição no link passado como argumento
+''' Coleta de dados '''
+def data_get(link: str) -> dict: # Função que vai pegar o nome e os preços do produto
+    # Abre o playwright
+    with sync_playwright() as p:
+        # Abre uma pagina do chromium para coletar os dados
+        browser: object = p.chromium.launch(headless=True)
+        page: object = browser.new_page()
 
-    return html.text # Retorna um texto com todo o html da pagina
+        # Acessa a pagina
+        page.goto(link)
 
-def request_api(api_url: str) -> str:
+        # Espera os itens da pagina carregar
+        page.wait_for_selector(".samsungmaster-global-pdp-shop-4-x-productName")
+        page.wait_for_selector(".samsungmaster-global-pdp-shop-4-x-sellingPrice")
 
-    response = requests.get(api_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"})
-    data = response.json()
-    prices = []
-    for _ in data:
-        print(_)
-    
+        # Coleta todas os itens
+        name_quotes: list = page.query_selector_all(".samsungmaster-global-pdp-shop-4-x-productName")
+        price_quotes: list = page.query_selector_all(".samsungmaster-global-pdp-shop-4-x-sellingPrice")
 
-def get_html_tag(link: str) -> dict: # Função que vai pegar os dados das tags
-    page = get_html(link)
+        name: list = [quote.inner_text() for quote in name_quotes] # Coleta o nome do produto
+        price: list = [quote.inner_text()[3:] for quote in price_quotes] # Coleta o preço do produto
 
-    soup = BeautifulSoup(page, "html.parser")
-    name = soup.find("h2", class_="samsungmaster-global-pdp-shop-4-x-productName").get_text()
-    price = request_api("https://shop.samsung.com/br/api/catalog_system/pub/products/search/?fq=productId:2322")
+        # Fecha a pagina
+        browser.close()
+
 
     return {
         "name" : name,
         "price" : price
     }
 
-print(get_html_tag("https://shop.samsung.com/br/monitor-curvo-full-hd-samsung-led-27/p?idsku=525&utm_source=google&utm_medium=ppc&utm_campaign=br_pd_ppc_prfmx_mon-multi_ecommerce_cad19-a5002-vd-opn_pla_none_paid-cdm-pfm-IDnone-{product-id}&utm_content=pla-prfmx&utm_term=na&cid=br_pd_ppc_prfmx_mon-multi_ecommerce_cad19-a5002-vd-opn_pla_none_paid-cdm-pfm-IDnone-{product-id}&keeplink=true&gad_source=1"))
+print(data_get("https://shop.samsung.com/br/monitor-curvo-full-hd-samsung-led-27/p"))
