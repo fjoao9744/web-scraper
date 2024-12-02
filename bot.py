@@ -4,6 +4,7 @@ import asyncio
 import os
 from discord.ext import commands
 from dotenv import load_dotenv
+from scrapping import data_get
 
 ''' Configurações padrão do bot '''
 intents: object = discord.Intents.default() 
@@ -25,7 +26,8 @@ async def on_guild_join(guild: object) -> str:
 ''' Comando scrap '''
 @bot.command()
 async def scraping(ctx, *, message: str) -> str:
-    await ctx.send(message)
+    product = await data_get(message)
+    await ctx.send(product)
 
 ''' Carregamento do token '''
 load_dotenv() # Carrega as variaveis de ambiente
@@ -33,5 +35,7 @@ load_dotenv() # Carrega as variaveis de ambiente
 token: str = os.getenv("BOT_TOKEN") # Token
 
 ''' Roda o bot com o token'''
-if __name__ == "__main__":
+def bot_run():
     bot.run(token) # Liga o bot
+
+bot_run()
