@@ -14,10 +14,14 @@ intents.members = True  # Permite que o bot acesse eventos relacionados a membro
 ''' Variavel para gerenciar os comandos do bot '''
 bot: object = commands.Bot(command_prefix="!", intents=intents)
 
-''' Função executada quando o bot ligar'''
+''' Função executada quando o bot ligar '''
+@bot.event
+async def on_ready():
+    print(f"Bot {bot.user} está online!")
+
+''' Função executada quando o bot entra em um servidor '''
 @bot.event
 async def on_guild_join(guild: object) -> str:
-    print(f'Bot {bot.user} está online!')
     user: object = guild.owner
 
     if user:
@@ -26,8 +30,13 @@ async def on_guild_join(guild: object) -> str:
 ''' Comando scrap '''
 @bot.command()
 async def scraping(ctx, *, message: str) -> str:
-    product = await data_get(message)
-    await ctx.send(product)
+    loading = await ctx.send("Coletando dados do produto... aguarde...")
+    try:
+        product = await data_get(message)
+        await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}")
+        
+    except:
+        await ctx.send("O link do produto é invalido.")
 
 ''' Carregamento do token '''
 load_dotenv() # Carrega as variaveis de ambiente
