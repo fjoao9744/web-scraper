@@ -32,6 +32,7 @@ async def data_get(link: str) -> dict: # Função que vai pegar o nome e os pre�
             "name" : name,
             "price" : [price[3:] for price in prices]
         }
+        
     except:
         return "Não foi possivel coletar os dados"
 
