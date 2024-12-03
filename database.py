@@ -1,21 +1,16 @@
-from peewee import *
+import sqlite3
 
-# Conectar ao banco de dados SQLite
-db = SqliteDatabase('database.db')
+conn = sqlite3.connect('database.db') # Estabelece conecção com o banco de dados
 
-class Product(Model):
-    user = CharField(unique=True) # Usuario que vai requerir o produto
-    name = CharField() # Nome do produto
-    price = BooleanField() # Preço do produto
+cursor = conn.cursor() # Cria um cursor para interagir com a tabela
 
-    class Meta:
-        database = db # Define que essa tabela está no banco 'db'
+def create_table(user): # Função que vai criar uma tabela
+    cursor.execute(f'''
+    CREATE TABLE IF NOT EXISTS {user} (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        price REAL NOT NULL
+)''')
 
-        # Conecta ao banco de dados
-db.connect()
-
-# Cria as tabelas no banco de dados
-db.create_tables([Product])
-
-# Fecha a conexão com o banco de dados
-db.close()
+create_table("paulo")
