@@ -5,6 +5,7 @@ import os
 from discord.ext import commands
 from dotenv import load_dotenv
 from scrapping import data_get
+from database import create_table
 
 ''' Configurações padrão do bot '''
 intents: object = discord.Intents.default() 
@@ -36,7 +37,6 @@ async def on_guild_join(guild) -> None:
 async def scraping(ctx, *, message: str) -> None:
     if ctx.guild == None:
         loading: str = await ctx.send("Coletando dados do produto... aguarde...")
-
         try:
             product: dict = await data_get(message)
             await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}") # Se tiver mais de um nome ou preço ele vai mostrar uma lista com os itens
@@ -48,6 +48,7 @@ async def scraping(ctx, *, message: str) -> None:
 @bot.command()
 async def play(ctx) -> None:
     if not ctx.guild == None: # Se não for enviado no privado ele vai mostrar a mensagem
+        await create_table(f"user_{ctx.author.id}") # Cria uma tabela com o id do usuario
         await ctx.author.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificar e pronto! o preço do produto sera enviado para você de 5 em 5 horas ")
 
 ''' Carregamento do token '''
