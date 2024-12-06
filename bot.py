@@ -5,7 +5,7 @@ import os
 from discord.ext import commands
 from dotenv import load_dotenv
 from scrapping import data_get
-from database import create_table
+from database import *
 
 ''' Configurações padrão do bot '''
 intents: object = discord.Intents.default() 
@@ -40,6 +40,8 @@ async def scraping(ctx, *, message: str) -> None:
         try:
             product: dict = await data_get(message)
             await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}") # Se tiver mais de um nome ou preço ele vai mostrar uma lista com os itens
+
+            await add_item(f"user_{ctx.author.id}", product)
             
         except:
             await ctx.send("O link do produto é invalido.")

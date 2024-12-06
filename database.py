@@ -9,8 +9,19 @@ async def create_table(user): # Função que vai criar uma tabela
     cursor.execute(f'''
     CREATE TABLE IF NOT EXISTS {user} (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user INTEGER NOT NULL,
         name TEXT NOT NULL,
         price REAL NOT NULL
     )''')
+
+    conn.commit()
+
+async def add_item(user, item: dict): # Função que vai adicionar um item na tabela
+    cursor.execute(f'''
+    INSERT INTO {user} (name, price)
+    VALUES (?, ?)
+    ''', (item['name'][0], item['price'][0]))
+
+    conn.commit()
+
+
 
