@@ -33,6 +33,7 @@ async def on_guild_join(guild) -> None:
         await channel.send(f"Olá! Eu sou o Web Scraper e fui desenvolvido para realizar a tarefa de web scraping, para começar basta apenas digitar `!play` para receber mais informações no privado.")
     
 ''' Comando scraping '''
+reacted_messages = {}
 @bot.command()
 async def scraping(ctx, *, message: str) -> None:
     if ctx.guild == None:
@@ -41,16 +42,44 @@ async def scraping(ctx, *, message: str) -> None:
             product: dict = await data_get(message)
             await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}") # Se tiver mais de um nome ou preço ele vai mostrar uma lista com os itens
 
-            await add_item(f"user_{ctx.author.id}", product)
-            
+            is_correct = await ctx.send("Esse é o produto que você deseja monitorar?")
+            reacted_messages[is_correct.id] = {'processed': False, 'product': product} # marca essa mensagem como ainda não reagida
+            await create_table(f"user_{ctx.author.id}") # Cria uma tabela com o id do usuario
+            await is_correct.add_reaction('✅') 
+            await is_correct.add_reaction('❌')
+
         except:
             await ctx.send("O link do produto é invalido.")
+        
+@bot.event
+async def on_reaction_add(reaction, user):
+    # Ignorar se for o próprio bot reagindo
+    if user == bot.user:
+        return
+
+    if reaction.message.id in reacted_messages: # Verifica se o id da reação esta dentro das mensagens reagidas
+        reaction_info = reacted_messages[reaction.message.id] # Pega as informações da mensagem reagida pelo id
+
+        if reaction_info['processed']:  # Se a chave 'processed' for True ele retorna nada
+            return
+
+        if reaction.message.content == 'Esse é o produto que você deseja monitorar?': # Verifica se foi acionada alguma reação nessa mensagem
+            product = reaction_info['product'] # Pega o produto
+            if reaction.emoji == '✅':
+                await reaction.message.channel.send(f'Então agora vai começar a monitoração do produto `{reacted_messages[reaction.message.id]["product"]["name"][0]}`!')
+                await add_item(f"user_{user.id}", product) # Adiciona o produto na tabela
+
+            elif reaction.emoji == '❌':
+                await reaction.message.channel.send(f'Entendi, para passar um novo produto é só digitar `!play` e passar o link na frente, não se esqueça.')
+
+            reacted_messages[reaction.message.id]['processed'] = True # Se qualquer reação for acionada, ela é marcada como True
+
+            # {"Id da mensagem": {'processed': True, 'product': {'name': ['Nome do produto'], 'price': ['preço do produto']}}}
 
 ''' Comando play '''
 @bot.command()
 async def play(ctx) -> None:
     if not ctx.guild == None: # Se não for enviado no privado ele vai mostrar a mensagem
-        await create_table(f"user_{ctx.author.id}") # Cria uma tabela com o id do usuario
         await ctx.author.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificar e pronto! o preço do produto sera enviado para você de 5 em 5 horas ")
 
 ''' Carregamento do token '''
