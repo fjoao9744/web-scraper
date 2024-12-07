@@ -40,6 +40,7 @@ async def scraping(ctx, *, message: str) -> None:
         loading: str = await ctx.send("Coletando dados do produto... aguarde...") # Mensagem de loading
         try:
             product: dict = await data_get(message) # Coleta os dados do produto
+            print(product)
             await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}") # Se tiver mais de um nome ou preço ele vai mostrar uma lista com os itens
 
             is_correct: str = await ctx.send("Esse é o produto que você deseja monitorar?")
