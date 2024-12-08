@@ -72,7 +72,7 @@ async def on_reaction_add(reaction, user):
                 await add_item(f"user_{user.id}", product) # Adiciona o produto na tabela
 
             elif reaction.emoji == '❌':
-                await reaction.message.channel.send(f'Entendi, para passar um novo produto é só digitar `!play` e passar o link na frente, não se esqueça.')
+                await reaction.message.channel.send(f'Entendi, para passar um novo produto é só digitar `!scraping` e passar o link na frente, não se esqueça.')
 
             reacted_messages[reaction.message.id]['processed']: bool = True # Se qualquer reação for acionada, ela é marcada como True
 
@@ -82,7 +82,7 @@ async def on_reaction_add(reaction, user):
 @bot.command()
 async def play(ctx) -> None:
     if not ctx.guild == None: # Se não for enviado no privado ele vai mostrar a mensagem
-        await ctx.author.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificar e pronto! o preço do produto sera enviado para você de 5 em 5 horas ")
+        await ctx.author.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificado, lembrando que os sites que eu posso realizar o scraping são a `Amazon`, o `Mercado Livre`, a `Samsung` e a `AliExpress`, o scraping é realizado de 10 em 10 horas. Agora, que tal realizar seu primeiro scraping? 😉")
 
 ''' Carregamento do token '''
 load_dotenv() # Carrega as variaveis de ambiente

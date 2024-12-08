@@ -14,7 +14,7 @@ async def verify_commerce(link): # Função que vai verificar qual é o e-commer
 
         await browser.close()
 
-        if "MercadoLivre" in title:
+        if "Frete grátis" in title:
             return "MercadoLivre"
 
         if "Samsung Brasil" in title:
@@ -31,6 +31,9 @@ async def verify_commerce(link): # Função que vai verificar qual é o e-commer
 async def data_get(link):
     commerce = await verify_commerce(link)
 
+    if commerce == "MercadoLivre":
+        return await is_mercadolivre(link)
+
     if commerce == "Samsung":
         return await is_samsung(link)
 
@@ -40,6 +43,28 @@ async def data_get(link):
     if commerce == "AliExpress":
         return await is_aliexpress(link)
 
+    
+async def is_mercadolivre(link):
+    async with async_playwright() as p: 
+        browser = await p.chromium.launch(headless=True)  # Abre uma pagina no chromium
+        page = await browser.new_page()  
+
+        await page.goto(link) 
+
+        await page.locator('//*[@id="ui-pdp-main-container"]/div[1]/div/div[1]/div[2]/div[1]/div/div[2]/h1').text_content()
+        await page.locator('//*[@id="ui-pdp-main-container"]/div[1]/div/div[1]/div[2]/div[2]/div[1]/div[1]/span[1]/span/span[2]').text_content()
+
+        name_quotes: list = await page.locator('//*[@id="ui-pdp-main-container"]/div[1]/div/div[1]/div[2]/div[1]/div/div[2]/h1').text_content()
+        price_quotes: list = await page.locator('//*[@id="ui-pdp-main-container"]/div[1]/div/div[1]/div[2]/div[2]/div[1]/div[1]/span[1]/span/span[2]').text_content()
+
+        await browser.close()
+
+
+
+    return {
+        "name" : [name_quotes],
+        "price" : [price_quotes]
+    }
 
 async def is_samsung(link):
     async with async_playwright() as p: 
@@ -82,9 +107,10 @@ async def is_amazon(link):
 
         await browser.close()
 
+
     price = []
     for _ in prices[0]:
-        if not _ in "1234567890":
+        if not _ in "1234567890.":
             break
         else:
             price.append(_)
@@ -107,7 +133,6 @@ async def is_aliexpress(link):
         name_quotes: list = await page.locator('//*[@id="root"]/div/div[1]/div/div[1]/div[1]/div[2]/div[5]/h1').text_content()
         price_quotes: list = await page.locator('//*[@id="root"]/div/div[1]/div/div[1]/div[1]/div[2]/div[2]/div[1]/span').text_content()
 
-
         await browser.close()
 
     return {
@@ -116,6 +141,4 @@ async def is_aliexpress(link):
     }
 
 
-
-# locator e query selector
-
+asyncio.run(is_mercadolivre("https://www.mercadolivre.com.br/motorola-edge-40-neo-5g-dual-sim-256-gb-black-beauty-8-gb-ram/p/MLB27865282#polycard_client=recommendations_home_navigation-trend-recommendations&reco_backend=machinalis-homes-univb&wid=MLB3516676249&reco_client=home_navigation-trend-recommendations&reco_item_pos=5&reco_backend_type=function&reco_id=13320e28-8143-4e7e-a80c-710be0c27d82&sid=recos&c_id=/home/navigation-trend-recommendations/element&c_uid=1eeade9d-dea7-46e7-95ab-7793a033be9e"))
