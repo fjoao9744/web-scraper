@@ -37,10 +37,15 @@ reacted_messages: dict = {}
 @bot.command()
 async def scraping(ctx, *, message: str) -> None:
     if ctx.guild == None: # Se não for enviado no privado ele vai mostrar a mensagem
+        global flag_event
+        if not flag_event.is_set():
+            await ctx.send("Já existe um produto sendo monitorado, para cancelar, digite `!cancel` e para saber mais sobre o produto em monitoria digite `!info`")
+            return
+
         loading: str = await ctx.send("Coletando dados do produto... aguarde...") # Mensagem de loading
         try:
             product: dict = await data_get(message) # Coleta os dados do produto
-            print(product)
+            
             await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}") # Se tiver mais de um nome ou preço ele vai mostrar uma lista com os itens
 
             is_correct: str = await ctx.send("Esse é o produto que você deseja monitorar?")
@@ -50,9 +55,13 @@ async def scraping(ctx, *, message: str) -> None:
             await is_correct.add_reaction('✅') # Adiciona duas reações
             await is_correct.add_reaction('❌') 
 
+            flag_event.clear()
+
         except:
             await ctx.send("O link do produto é invalido.") # Se o link for invalido
 
+flag_event = asyncio.Event()
+flag_event.set()
 @bot.event
 async def on_reaction_add(reaction, user): 
     # Ignorar se for o próprio bot reagindo
@@ -69,7 +78,12 @@ async def on_reaction_add(reaction, user):
             product = reaction_info['product'] # Pega o produto
             if reaction.emoji == '✅':
                 await reaction.message.channel.send(f'Então agora vai começar a monitoração do produto `{reacted_messages[reaction.message.id]["product"]["name"][0]}`!')
-                await add_item(f"user_{user.id}", product) # Adiciona o produto na tabela
+                global flag
+                await add_item(f"user_{user.id}", product, flag_event.is_set()) # Adiciona o produto na tabela
+                
+
+                task = asyncio.create_task(monitoring(f"user_{user.id}", product))
+
 
             elif reaction.emoji == '❌':
                 await reaction.message.channel.send(f'Entendi, para passar um novo produto é só digitar `!scraping` e passar o link na frente, não se esqueça.')
@@ -84,6 +98,26 @@ async def play(ctx) -> None:
     if not ctx.guild == None: # Se não for enviado no privado ele vai mostrar a mensagem
         await ctx.author.send("Ola! esta pronto para monitorar o preço de qualquer produto? é só digitar o comando '!scraping' e colocar a URL do produto que deseja verificado, lembrando que os sites que eu posso realizar o scraping são a `Amazon`, o `Mercado Livre`, a `Samsung` e a `AliExpress`, o scraping é realizado de 10 em 10 horas. Agora, que tal realizar seu primeiro scraping? 😉")
 
+@bot.command()
+async def cancel(ctx):
+    global flag_event
+    flag_event.set()  # "Seta" o evento, liberando o próximo monitoramento
+    await ctx.send("O monitoramento foi cancelado. Agora você pode monitorar outro produto.")
+
+
+async def monitoring(user, product):
+    global flag_event
+    while not flag_event.is_set():  # Enquanto o evento estiver "limpo"
+        last_product = await last_item(user)
+
+        if str(product['name'][0]) == str(last_product[0]):
+            if product['price'][0] == str(last_product[1]):
+                print("O preço não mudou.")
+
+        await asyncio.sleep(2)  # Usando asyncio.sleep em vez de time.sleep            
+    
+
+        
 ''' Carregamento do token '''
 load_dotenv() # Carrega as variaveis de ambiente
 
@@ -94,3 +128,4 @@ def bot_run() -> None:
     bot.run(token) # Liga o bot
 
 bot_run()
+

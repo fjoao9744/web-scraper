@@ -36,7 +36,6 @@ async def data_get(link):
     commerce = await verify_commerce(link)
 
     if commerce == "MercadoLivre":
-        print(await is_mercadolivre(link))
         return await is_mercadolivre(link)
 
     if commerce == "Samsung":
