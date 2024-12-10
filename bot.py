@@ -41,11 +41,12 @@ async def scraping(ctx, *, message: str) -> None:
         if not flag_event.is_set():
             await ctx.send("Já existe um produto sendo monitorado, para cancelar, digite `!cancel` e para saber mais sobre o produto em monitoria digite `!info`")
             return
+        flag_event.clear()
 
         loading: str = await ctx.send("Coletando dados do produto... aguarde...") # Mensagem de loading
         try:
             product: dict = await data_get(message) # Coleta os dados do produto
-            
+
             await ctx.send(f"**Produto:** {product['name'][0]}\n**Preço:** {product['price'][0]}" if len(product['name']) == 1 and len(product['price']) == 1 else f"**Produto:** {product['name']} \n**Preço:** {product['price']}") # Se tiver mais de um nome ou preço ele vai mostrar uma lista com os itens
 
             is_correct: str = await ctx.send("Esse é o produto que você deseja monitorar?")
@@ -54,8 +55,6 @@ async def scraping(ctx, *, message: str) -> None:
             await create_table(f"user_{ctx.author.id}") # Cria uma tabela com o id do usuario
             await is_correct.add_reaction('✅') # Adiciona duas reações
             await is_correct.add_reaction('❌') 
-
-            flag_event.clear()
 
         except:
             await ctx.send("O link do produto é invalido.") # Se o link for invalido
@@ -81,12 +80,13 @@ async def on_reaction_add(reaction, user):
                 global flag
                 await add_item(f"user_{user.id}", product, flag_event.is_set()) # Adiciona o produto na tabela
                 
-
-                task = asyncio.create_task(monitoring(f"user_{user.id}", product))
+                task = asyncio.create_task(monitoring(f"user_{user.id}", product, user))
 
 
             elif reaction.emoji == '❌':
                 await reaction.message.channel.send(f'Entendi, para passar um novo produto é só digitar `!scraping` e passar o link na frente, não se esqueça.')
+                flag_event.set()
+
 
             reacted_messages[reaction.message.id]['processed']: bool = True # Se qualquer reação for acionada, ela é marcada como True
 
@@ -105,16 +105,23 @@ async def cancel(ctx):
     await ctx.send("O monitoramento foi cancelado. Agora você pode monitorar outro produto.")
 
 
-async def monitoring(user, product):
+async def monitoring(user, product, discord_user: discord.User):
     global flag_event
     while not flag_event.is_set():  # Enquanto o evento estiver "limpo"
         last_product = await last_item(user)
 
         if str(product['name'][0]) == str(last_product[0]):
             if product['price'][0] == str(last_product[1]):
-                print("O preço não mudou.")
+                print("monitoramento")
+            else:
+                await discord_user.send(f"O preço do produto `{product['name'][0]}` mudou! Novo preço: {product['price'][0]}")  # Envia mensagem para o usuário
+                await add_item(f"user_{discord_user.id}", product, flag_event.is_set())
+        else:
+            await discord_user.send(f"O produto `{product['name'][0]}` não está mais disponível. Monitoramento encerrado.")
+            flag_event.set()
+            break  # Caso o produto não esteja mais disponível, encerra o monitoramento.
 
-        await asyncio.sleep(2)  # Usando asyncio.sleep em vez de time.sleep            
+        await asyncio.sleep(2)  # Usando asyncio.sleep em vez de time.sleep       
     
 
         
