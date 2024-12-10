@@ -11,11 +11,15 @@ async def verify_commerce(link): # Função que vai verificar qual é o e-commer
         await page.goto(link) 
 
         title = await page.title()
+        
+        try:
+            locator = await page.locator("body > header > div > div.nav-header-plus-logo.nav-area.nav-top-area.nav-left-area > a.nav-logo").text_content()
+            if locator[:13] == "Mercado Livre":
+                return "MercadoLivre"
+        except:
+            pass
 
         await browser.close()
-
-        if "Frete grátis" in title:
-            return "MercadoLivre"
 
         if "Samsung Brasil" in title:
             return "Samsung"
@@ -32,6 +36,7 @@ async def data_get(link):
     commerce = await verify_commerce(link)
 
     if commerce == "MercadoLivre":
+        print(await is_mercadolivre(link))
         return await is_mercadolivre(link)
 
     if commerce == "Samsung":
@@ -58,8 +63,6 @@ async def is_mercadolivre(link):
         price_quotes: list = await page.locator('//*[@id="ui-pdp-main-container"]/div[1]/div/div[1]/div[2]/div[2]/div[1]/div[1]/span[1]/span/span[2]').text_content()
 
         await browser.close()
-
-
 
     return {
         "name" : [name_quotes],
@@ -141,4 +144,4 @@ async def is_aliexpress(link):
     }
 
 
-asyncio.run(is_mercadolivre("https://www.mercadolivre.com.br/motorola-edge-40-neo-5g-dual-sim-256-gb-black-beauty-8-gb-ram/p/MLB27865282#polycard_client=recommendations_home_navigation-trend-recommendations&reco_backend=machinalis-homes-univb&wid=MLB3516676249&reco_client=home_navigation-trend-recommendations&reco_item_pos=5&reco_backend_type=function&reco_id=13320e28-8143-4e7e-a80c-710be0c27d82&sid=recos&c_id=/home/navigation-trend-recommendations/element&c_uid=1eeade9d-dea7-46e7-95ab-7793a033be9e"))
+asyncio.run(data_get("https://www.mercadolivre.com.br/motorola-edge-40-neo-5g-dual-sim-256-gb-black-beauty-8-gb-ram/p/MLB27865282#polycard_client=recommendations_home_navigation-trend-recommendations&reco_backend=machinalis-homes-univb&wid=MLB3516676249&reco_client=home_navigation-trend-recommendations&reco_item_pos=5&reco_backend_type=function&reco_id=13320e28-8143-4e7e-a80c-710be0c27d82&sid=recos&c_id=/home/navigation-trend-recommendations/element&c_uid=1eeade9d-dea7-46e7-95ab-7793a033be9e"))
